@@ -59,12 +59,25 @@
     .legend-dot.blue { background: #3b82f6; }
     .legend-dot.green { background: #10b981; }
     .game-grid {
+      position: relative;
       display: grid;
       grid-template-columns: repeat(6, 1fr);
       gap: 10px;
       width: 100%;
       max-width: 900px;
       margin-bottom: 16px;
+    }
+    .game-grid svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .game-grid svg line {
+      stroke-dasharray: 6 4;
+      stroke-linecap: round;
     }
     .card {
       aspect-ratio: 3 / 4;
@@ -300,7 +313,9 @@
   <div class="legend-item"><div class="legend-dot green"></div> Matrices</div>
 </div>
 
-<div class="game-grid" id="gameGrid"></div>
+<div class="game-grid" id="gameGrid">
+  <svg id="connector"></svg>
+</div>
 
 <div class="toast" id="toast">
   <div class="toast-title" id="toastTitle"></div>
@@ -437,11 +452,16 @@
 
   function renderGrid() {
     const grid = document.getElementById('gameGrid');
-    grid.innerHTML = '';
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('id', 'connector');
+    const frag = document.createDocumentFragment();
+    frag.appendChild(svg);
     cards.forEach((c, i) => {
       const div = document.createElement('div');
       div.className = 'card';
       div.dataset.index = i;
+      div.dataset.pairId = c.pairId;
+      div.dataset.type = c.type;
       div.innerHTML = `
         <div class="card-inner">
           <div class="card-face card-back"></div>
@@ -453,8 +473,47 @@
           </div>
         </div>`;
       div.addEventListener('click', () => flipCard(i));
-      grid.appendChild(div);
+      div.addEventListener('mouseenter', () => hoverPair(i));
+      div.addEventListener('mouseleave', clearLine);
+      frag.appendChild(div);
     });
+    grid.replaceChildren(frag);
+  }
+
+  function hoverPair(index) {
+    const el = document.querySelectorAll('.card')[index];
+    if (!el.classList.contains('matched')) return;
+    const pairId = cards[index].pairId;
+    const allEls = document.querySelectorAll('.card');
+    let other = -1;
+    for (let i = 0; i < cards.length; i++) {
+      if (i !== index && cards[i].pairId === pairId) {
+        other = i;
+        break;
+      }
+    }
+    if (other === -1) return;
+    drawConnector(index, other, cards[index].color);
+  }
+
+  function drawConnector(i, j, color) {
+    const svg = document.getElementById('connector');
+    const grid = document.getElementById('gameGrid');
+    const cardEls = document.querySelectorAll('.card');
+    const r1 = cardEls[i].getBoundingClientRect();
+    const r2 = cardEls[j].getBoundingClientRect();
+    const gr = grid.getBoundingClientRect();
+    const x1 = r1.left - gr.left + r1.width / 2;
+    const y1 = r1.top - gr.top + r1.height / 2;
+    const x2 = r2.left - gr.left + r2.width / 2;
+    const y2 = r2.top - gr.top + r2.height / 2;
+    const lineColor = color === 'blue' ? '#60a5fa' : '#34d399';
+    svg.innerHTML = `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${lineColor}" stroke-width="2.5" />`;
+  }
+
+  function clearLine() {
+    const svg = document.getElementById('connector');
+    if (svg) svg.innerHTML = '';
   }
 
   function flipCard(index) {
