@@ -92,6 +92,7 @@
       transform-style: preserve-3d;
       border-radius: 12px;
     }
+
     .card.flipped .card-inner { transform: rotateY(180deg); }
     .card.matched .card-inner { transform: rotateY(180deg); }
 
@@ -111,6 +112,7 @@
       transition: border-color 0.3s, box-shadow 0.3s;
     }
     .card-back {
+      position: relative;
       background: linear-gradient(145deg, #1e293b, #334155);
       border: 2px solid #475569;
       font-size: 1.8rem;
@@ -118,6 +120,26 @@
       color: #64748b;
       user-select: none;
     }
+    .card-back .card-badge {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.65);
+      color: #f1f5f9;
+      font-size: 0.6rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .card-back .card-badge.show { opacity: 1; }
     .card-back::after {
       content: "?";
       font-size: 2.5rem;
@@ -176,6 +198,7 @@
       border-color: #fbbf24;
       box-shadow: 0 0 16px rgba(251,191,36,0.3);
     }
+
     .card:not(.flipped):not(.matched):hover .card-inner {
       transform: scale(1.03);
     }
@@ -421,6 +444,8 @@
   let locked = false;
   let timeoutId = null;
   let toastTimeout = null;
+  let devMode = false;
+  let clickCount = 0;
 
   function shuffle(arr) {
     for (let i = arr.length - 1; i > 0; i--) {
@@ -464,7 +489,7 @@
       div.dataset.type = c.type;
       div.innerHTML = `
         <div class="card-inner">
-          <div class="card-face card-back"></div>
+          <div class="card-face card-back"><div class="card-badge${devMode ? ' show' : ''}">${c.pairId}</div></div>
           <div class="card-face card-front ${c.color}">
             <div class="card-category">${c.type === 'math' ? 'CONCEPTO MATEMÁTICO' : 'MEMORIA HISTÓRICA'}</div>
             ${c.symbol ? `<div class="card-symbol">${c.symbol}</div>` : ''}
@@ -587,6 +612,16 @@
   function hideInfo() {
     document.getElementById('infoOverlay').classList.remove('active');
   }
+
+  // click 30 veces en "Conjuntos" para activar modo dev
+  document.querySelector('.legend-item:first-child')?.addEventListener('click', function() {
+    clickCount++;
+    if (clickCount >= 30 && !devMode) {
+      devMode = true;
+      console.log('--- Modo desarrollador activado ---');
+      document.querySelectorAll('.card-badge').forEach(b => b.classList.add('show'));
+    }
+  });
 
   // close overlays on backdrop click
   document.getElementById('winOverlay').addEventListener('click', function(e) {
