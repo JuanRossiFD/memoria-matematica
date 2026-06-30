@@ -73,16 +73,21 @@
       width: 100%;
       height: 100%;
       pointer-events: none;
-      z-index: 10;
+      z-index: 2;
     }
     .game-grid svg line {
       stroke-dasharray: 6 4;
       stroke-linecap: round;
     }
     .card {
+      position: relative;
+      z-index: 1;
       aspect-ratio: 3 / 4;
       perspective: 800px;
       cursor: pointer;
+    }
+    .card.hover-connect {
+      z-index: 3;
     }
     .card-inner {
       position: relative;
@@ -197,6 +202,10 @@
     .card.matched .card-front {
       border-color: #fbbf24;
       box-shadow: 0 0 16px rgba(251,191,36,0.3);
+    }
+    .card.matched:hover .card-front {
+      border-color: #fcd34d;
+      box-shadow: 0 0 24px rgba(251,191,36,0.5);
     }
 
     .card:not(.flipped):not(.matched):hover .card-inner {
@@ -519,6 +528,8 @@
       }
     }
     if (other === -1) return;
+    document.querySelectorAll('.card')[index].classList.add('hover-connect');
+    document.querySelectorAll('.card')[other].classList.add('hover-connect');
     drawConnector(index, other, cards[index].color);
   }
 
@@ -540,6 +551,7 @@
   function clearLine() {
     const svg = document.getElementById('connector');
     if (svg) svg.innerHTML = '';
+    document.querySelectorAll('.card.hover-connect').forEach(el => el.classList.remove('hover-connect'));
   }
 
   function flipCard(index) {
