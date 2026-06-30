@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memoria Matemática</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px;
+      color: #e2e8f0;
+    }
+    h1 {
+      font-size: 1.6rem;
+      text-align: center;
+      background: linear-gradient(135deg, #60a5fa, #34d399);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 4px;
+    }
+    .subtitle {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+    .stats {
+      display: flex;
+      gap: 20px;
+      font-size: 0.95rem;
+      background: rgba(255,255,255,0.06);
+      padding: 8px 20px;
+      border-radius: 12px;
+      margin-bottom: 14px;
+      backdrop-filter: blur(4px);
+    }
+    .stats span { color: #cbd5e1; }
+    .stats strong { color: #f1f5f9; }
+    .legend {
+      display: flex;
+      gap: 16px;
+      font-size: 0.8rem;
+      margin-bottom: 14px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .legend-dot {
+      width: 12px; height: 12px; border-radius: 4px;
+    }
+    .legend-dot.blue { background: #3b82f6; }
+    .legend-dot.green { background: #10b981; }
+    .game-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      width: 100%;
+      max-width: 900px;
+      margin-bottom: 16px;
+    }
+    .card {
+      aspect-ratio: 3 / 4;
+      perspective: 800px;
+      cursor: pointer;
+    }
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-style: preserve-3d;
+      border-radius: 12px;
+    }
+    .card.flipped .card-inner { transform: rotateY(180deg); }
+    .card.matched .card-inner { transform: rotateY(180deg); }
+
+    .card-face {
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      backface-visibility: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 8px;
+      text-align: center;
+      font-size: 0.7rem;
+      border: 2px solid transparent;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .card-back {
+      background: linear-gradient(145deg, #1e293b, #334155);
+      border: 2px solid #475569;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #64748b;
+      user-select: none;
+    }
+    .card-back::after {
+      content: "?";
+      font-size: 2.5rem;
+      opacity: 0.4;
+    }
+    .card.matched .card-back { display: none; }
+
+    .card-front {
+      transform: rotateY(180deg);
+      overflow: hidden;
+    }
+    .card-front.blue {
+      background: linear-gradient(180deg, #1e3a5f 0%, #1a365d 100%);
+      border-color: #3b82f6;
+    }
+    .card-front.green {
+      background: linear-gradient(180deg, #064e3b 0%, #065f46 100%);
+      border-color: #10b981;
+    }
+
+    .card-category {
+      font-size: 0.55rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-bottom: 4px;
+    }
+    .card-front.blue .card-category { background: rgba(59,130,246,0.25); color: #93c5fd; }
+    .card-front.green .card-category { background: rgba(16,185,129,0.25); color: #6ee7b7; }
+
+    .card-symbol {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 2px 0;
+      line-height: 1.2;
+    }
+    .card-front.blue .card-symbol { color: #60a5fa; }
+    .card-front.green .card-symbol { color: #34d399; }
+
+    .card-name {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      margin-bottom: 2px;
+      line-height: 1.2;
+    }
+    .card-desc {
+      font-size: 0.55rem;
+      color: #cbd5e1;
+      line-height: 1.3;
+    }
+
+    .card.matched .card-front {
+      border-color: #fbbf24;
+      box-shadow: 0 0 16px rgba(251,191,36,0.3);
+    }
+    .card:not(.flipped):not(.matched):hover .card-inner {
+      transform: scale(1.03);
+    }
+    .card.mismatch .card-front {
+      border-color: #ef4444 !important;
+      box-shadow: 0 0 16px rgba(239,68,68,0.4) !important;
+      animation: shake 0.4s ease;
+    }
+    @keyframes shake {
+      0%, 100% { transform: rotateY(180deg) translateX(0); }
+      25% { transform: rotateY(180deg) translateX(-4px); }
+      75% { transform: rotateY(180deg) translateX(4px); }
+    }
+
+    .toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-80px);
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 14px;
+      padding: 14px 24px;
+      max-width: 460px;
+      width: 90%;
+      text-align: center;
+      z-index: 200;
+      opacity: 0;
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s;
+      pointer-events: none;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+    .toast.visible {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+    .toast .toast-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #fbbf24;
+      margin-bottom: 4px;
+    }
+    .toast .toast-body {
+      font-size: 0.75rem;
+      color: #cbd5e1;
+      line-height: 1.4;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .btn {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: white;
+      border: none;
+      padding: 10px 28px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn:hover { transform: scale(1.04); box-shadow: 0 4px 20px rgba(59,130,246,0.4); }
+    .btn:active { transform: scale(0.97); }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid #475569;
+      color: #cbd5e1;
+    }
+    .btn-outline:hover { border-color: #94a3b8; box-shadow: 0 4px 16px rgba(148,163,184,0.15); }
+
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(6px);
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      padding: 20px;
+    }
+    .overlay.active { display: flex; }
+    .modal {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 20px;
+      padding: 32px;
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+    }
+    .modal h2 {
+      font-size: 1.6rem;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .modal p { color: #cbd5e1; margin-bottom: 6px; font-size: 0.95rem; }
+    .modal .btn { margin-top: 16px; }
+
+    @media (max-width: 700px) {
+      .game-grid { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+      .card-face { font-size: 0.6rem; padding: 6px; }
+      .card-symbol { font-size: 1.1rem; }
+      .card-name { font-size: 0.6rem; }
+      .card-desc { font-size: 0.5rem; }
+      h1 { font-size: 1.2rem; }
+    }
+    @media (max-width: 440px) {
+      .game-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+      .card-face { font-size: 0.5rem; padding: 4px; }
+      .card-symbol { font-size: 0.9rem; }
+      .card-category { font-size: 0.45rem; }
+      .stats { font-size: 0.8rem; gap: 12px; padding: 6px 14px; }
+    }
+  </style>
+</head>
+<body>
+
+<h1>Memoria Matemática</h1>
+<p class="subtitle">Juego de asociación entre Conjuntos, Matrices y Memoria Histórica</p>
+
+<div class="stats">
+  <span>Pares: <strong id="score">0</strong> / 12</span>
+  <span>Turnos: <strong id="turns">0</strong></span>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot blue"></div> Conjuntos</div>
+  <div class="legend-item"><div class="legend-dot green"></div> Matrices</div>
+</div>
+
+<div class="game-grid" id="gameGrid"></div>
+
+<div class="toast" id="toast">
+  <div class="toast-title" id="toastTitle"></div>
+  <div class="toast-body" id="toastBody"></div>
+</div>
+
+<div class="btn-row">
+  <button class="btn" onclick="initGame()">🔄 Nuevo juego</button>
+  <button class="btn btn-outline" onclick="showInfo()">ℹ️ Información</button>
+</div>
+
+<div class="overlay" id="winOverlay">
+  <div class="modal">
+    <h2>--- ¡Juego completado! ---</h2>
+    <p>Encontraste los 12 pares.</p>
+    <p id="finalTurns">Turnos utilizados: 0</p>
+    <p style="font-size:0.8rem;color:#94a3b8;margin-top:12px;">
+      Cada par asocia un concepto matemático con un hecho de nuestra memoria histórica.<br>
+      Reflexioná sobre las analogías mientras jugás.
+    </p>
+    <button class="btn" onclick="closeWin(); initGame();">Jugar de nuevo</button>
+  </div>
+</div>
+
+<div class="overlay" id="infoOverlay">
+  <div class="modal" style="text-align:left;max-width:560px;">
+    <h2 style="text-align:center;margin-bottom:12px;background:linear-gradient(135deg,#60a5fa,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Memoria Matemática</h2>
+    <p style="font-size:0.85rem;color:#94a3b8;margin-bottom:10px;">
+      Juego de asociación entre Conjuntos, Matrices y Memoria Histórica.
+    </p>
+    <hr style="border-color:#334155;margin:8px 0;">
+    <p style="font-size:0.8rem;color:#cbd5e1;margin-bottom:6px;"><strong style="color:#f1f5f9;">Objetivo:</strong> Encontrar los 12 pares. Cada par asocia un concepto matemático con un hecho histórico de la última dictadura militar argentina mediante una analogía pedagógica.</p>
+    <p style="font-size:0.8rem;color:#cbd5e1;margin-bottom:6px;"><strong style="color:#f1f5f9;">Cómo jugar:</strong> Hacé clic en dos cartas por turno. Si corresponden al mismo par (concepto + hecho histórico), se guardan y sumás un punto. Si no, se vuelven a dar vuelta. Gana quien consiga más pares.</p>
+    <p style="font-size:0.8rem;color:#cbd5e1;margin-bottom:6px;"><strong style="color:#f1f5f9;">Colores:</strong><br>
+    <span style="color:#60a5fa;">■</span> Azul = Conceptos de Conjuntos<br>
+    <span style="color:#34d399;">■</span> Verde = Conceptos de Matrices</p>
+    <hr style="border-color:#334155;margin:8px 0;">
+    <p style="font-size:0.7rem;color:#94a3b8;line-height:1.5;">
+      <strong>Fundamentación pedagógica:</strong> Esta propuesta integra Matemática y Ciencias Sociales utilizando el aprendizaje basado en analogías. Favorece el aprendizaje activo y el trabajo colaborativo, fortaleciendo la memoria histórica mediante una actividad lúdica. Las asociaciones entre conceptos matemáticos y hechos históricos son recursos didácticos para promover la reflexión y el diálogo, no equivalencias literales entre ambos campos.
+    </p>
+    <div style="text-align:center;margin-top:14px;">
+      <button class="btn" onclick="hideInfo()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const PAIRS = [
+    { id: 1, cat: 'Conjuntos', color: 'blue',
+      math: { symbol: 'U', name: 'Conjunto Universo', desc: 'Conjunto total sobre el que se trabaja.' },
+      history: { name: 'Población argentina en 1976', desc: 'Total de habitantes en Argentina al momento del golpe de Estado.' },
+      justify: 'El conjunto universo representa el conjunto total sobre el que se trabaja; aquí, la población argentina en 1976.' },
+    { id: 2, cat: 'Conjuntos', color: 'blue',
+      math: { symbol: 'A ⊂ U', name: 'Subconjunto', desc: 'Conjunto incluido dentro de otro de mayor tamaño.' },
+      history: { name: 'Detenidos-desaparecidos', desc: 'Personas secuestradas ilegalmente durante la dictadura; subconjunto de la población total.' },
+      justify: 'Los detenidos-desaparecidos constituyen un subconjunto de la población total.' },
+    { id: 3, cat: 'Conjuntos', color: 'blue',
+      math: { symbol: '∩', name: 'Intersección', desc: 'Elementos comunes a dos conjuntos simultáneamente.' },
+      history: { name: 'Detenidos y exiliados', desc: 'Personas que pertenecen a ambos grupos: secuestrados y forzados al exilio.' },
+      justify: 'Representa las personas que pertenecen simultáneamente a ambos grupos.' },
+    { id: 4, cat: 'Conjuntos', color: 'blue',
+      math: { symbol: "A'", name: 'Complemento', desc: 'Elementos del universo que no pertenecen al conjunto.' },
+      history: { name: 'Ciudadanos no perseguidos', desc: 'Quienes no fueron víctimas directas del terrorismo de Estado.' },
+      justify: 'Son quienes no pertenecen al conjunto de perseguidos.' },
+    { id: 5, cat: 'Conjuntos', color: 'blue',
+      math: { symbol: '|A|', name: 'Cardinalidad', desc: 'Cantidad de elementos que posee un conjunto.' },
+      history: { name: '30.000 desaparecidos', desc: 'Cifra simbólica que representa la magnitud del terrorismo de Estado.' },
+      justify: 'La cardinalidad representa la cantidad de elementos de un conjunto.' },
+    { id: 6, cat: 'Conjuntos', color: 'blue',
+      math: { symbol: '∅', name: 'Conjunto Vacío', desc: 'Conjunto que no posee elementos.' },
+      history: { name: 'Las listas negadas', desc: 'Ausencia de registros oficiales; la información fue deliberadamente destruida u ocultada.' },
+      justify: 'Simboliza la ausencia de información o la inexistencia de registros oficiales.' },
+    { id: 7, cat: 'Matrices', color: 'green',
+      math: { symbol: '3×3', name: 'Matriz 3×3', desc: 'Estructura rectangular de 3 filas y 3 columnas.' },
+      history: { name: 'Las tres Juntas Militares', desc: 'Las tres juntas que gobernaron durante la dictadura: una estructura de poder tripartita.' },
+      justify: 'La estructura 3×3 representa simbólicamente las tres juntas militares.' },
+    { id: 8, cat: 'Matrices', color: 'green',
+      math: { symbol: 'aᵢⱼ', name: 'Elemento aᵢⱼ', desc: 'Cada valor ocupa una posición específica (fila i, columna j).' },
+      history: { name: 'Represor en un centro clandestino', desc: 'Cada individuo operaba en un lugar y rol específico dentro de la estructura represiva.' },
+      justify: 'Cada elemento ocupa una posición específica dentro de una estructura mayor.' },
+    { id: 9, cat: 'Matrices', color: 'green',
+      math: { symbol: 'Aᵀ', name: 'Transpuesta', desc: 'Matriz que intercambia filas por columnas; cambia la perspectiva.' },
+      history: { name: 'Juicios de lesa humanidad', desc: 'Cambio de perspectiva: de la impunidad al juzgamiento de los crímenes.' },
+      justify: 'Representa simbólicamente el cambio de perspectiva: de la impunidad al juzgamiento.' },
+    { id: 10, cat: 'Matrices', color: 'green',
+      math: { symbol: 'det(A) = 0', name: 'Determinante nulo', desc: 'La matriz pierde su inversa; la estructura se vuelve inestable.' },
+      history: { name: 'Caída de la Junta (1983)', desc: 'El colapso del régimen militar: una estructura que perdió estabilidad.' },
+      justify: 'El determinante nulo simboliza una estructura que pierde estabilidad.' },
+    { id: 11, cat: 'Matrices', color: 'green',
+      math: { symbol: 'A + B', name: 'Suma de matrices', desc: 'Combinación elemento a elemento de dos matrices de igual dimensión.' },
+      history: { name: 'Organismos de DDHH unidos', desc: 'La acción conjunta de múltiples organizaciones que sumaron fuerzas por justicia.' },
+      justify: 'La suma representa la acción conjunta de múltiples organizaciones.' },
+    { id: 12, cat: 'Matrices', color: 'green',
+      math: { symbol: 'I', name: 'Matriz Identidad', desc: 'Matriz que representa el estado neutro o normal del sistema.' },
+      history: { name: 'Constitución suspendida', desc: 'La Constitución Nacional, marco normativo del Estado de derecho, fue derogada de hecho.' },
+      justify: 'La matriz identidad representa el estado normal del sistema; la ruptura del orden constitucional invita a reflexionar sobre su ausencia. Recurso pedagógico, no equivalencia literal.' }
+  ];
+
+  let cards = [];
+  let flipped = [];
+  let matched = 0;
+  let turns = 0;
+  let locked = false;
+  let timeoutId = null;
+  let toastTimeout = null;
+
+  function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function initGame() {
+    closeWin();
+    clearTimeout(timeoutId);
+    clearTimeout(toastTimeout);
+    document.getElementById('toast').classList.remove('visible');
+    flipped = [];
+    matched = 0;
+    turns = 0;
+    locked = false;
+    document.getElementById('score').textContent = '0';
+    document.getElementById('turns').textContent = '0';
+    cards = [];
+    PAIRS.forEach(p => {
+      cards.push({ pairId: p.id, type: 'math', color: p.color, cat: p.cat, symbol: p.math.symbol, name: p.math.name, desc: p.math.desc, justify: p.justify });
+      cards.push({ pairId: p.id, type: 'history', color: p.color, cat: p.cat, symbol: '', name: p.history.name, desc: p.history.desc, justify: p.justify });
+    });
+    shuffle(cards);
+    renderGrid();
+  }
+
+  function renderGrid() {
+    const grid = document.getElementById('gameGrid');
+    grid.innerHTML = '';
+    cards.forEach((c, i) => {
+      const div = document.createElement('div');
+      div.className = 'card';
+      div.dataset.index = i;
+      div.innerHTML = `
+        <div class="card-inner">
+          <div class="card-face card-back"></div>
+          <div class="card-face card-front ${c.color}">
+            <div class="card-category">${c.type === 'math' ? 'CONCEPTO MATEMÁTICO' : 'MEMORIA HISTÓRICA'}</div>
+            ${c.symbol ? `<div class="card-symbol">${c.symbol}</div>` : ''}
+            <div class="card-name">${c.name}</div>
+            <div class="card-desc">${c.desc}</div>
+          </div>
+        </div>`;
+      div.addEventListener('click', () => flipCard(i));
+      grid.appendChild(div);
+    });
+  }
+
+  function flipCard(index) {
+    if (locked) return;
+    const el = document.querySelectorAll('.card')[index];
+    if (!el || el.classList.contains('flipped') || el.classList.contains('matched')) return;
+
+    el.classList.add('flipped');
+    flipped.push(index);
+
+    if (flipped.length === 2) {
+      turns++;
+      document.getElementById('turns').textContent = turns;
+      locked = true;
+      checkMatch();
+    }
+  }
+
+  function showToast(justify) {
+    const el = document.getElementById('toast');
+    document.getElementById('toastTitle').textContent = '--- Par encontrado ---';
+    document.getElementById('toastBody').textContent = justify;
+    el.classList.add('visible');
+    clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => el.classList.remove('visible'), 3500);
+  }
+
+  function checkMatch() {
+    const [i, j] = flipped;
+    const a = cards[i], b = cards[j];
+    if (a.pairId === b.pairId && a.type !== b.type) {
+      setTimeout(() => {
+        document.querySelectorAll('.card')[i].classList.add('matched');
+        document.querySelectorAll('.card')[j].classList.add('matched');
+        matched++;
+        document.getElementById('score').textContent = matched;
+        showToast(a.justify);
+        flipped = [];
+        locked = false;
+        if (matched === 12) {
+          setTimeout(showWin, 800);
+        }
+      }, 400);
+    } else {
+      // mismatch
+      setTimeout(() => {
+        const el1 = document.querySelectorAll('.card')[i];
+        const el2 = document.querySelectorAll('.card')[j];
+        el1.classList.add('mismatch');
+        el2.classList.add('mismatch');
+        timeoutId = setTimeout(() => {
+          el1.classList.remove('flipped', 'mismatch');
+          el2.classList.remove('flipped', 'mismatch');
+          flipped = [];
+          locked = false;
+        }, 700);
+      }, 400);
+    }
+  }
+
+  function showWin() {
+    document.getElementById('finalTurns').textContent = `Turnos utilizados: ${turns}`;
+    document.getElementById('winOverlay').classList.add('active');
+  }
+  function closeWin() {
+    document.getElementById('winOverlay').classList.remove('active');
+  }
+  function showInfo() {
+    document.getElementById('infoOverlay').classList.add('active');
+  }
+  function hideInfo() {
+    document.getElementById('infoOverlay').classList.remove('active');
+  }
+
+  // close overlays on backdrop click
+  document.getElementById('winOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeWin();
+  });
+  document.getElementById('infoOverlay').addEventListener('click', function(e) {
+    if (e.target === this) hideInfo();
+  });
+
+  // start
+  initGame();
+</script>
+</body>
+</html>
