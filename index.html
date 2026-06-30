@@ -281,6 +281,18 @@
       color: #cbd5e1;
     }
     .btn-outline:hover { border-color: #94a3b8; box-shadow: 0 4px 16px rgba(148,163,184,0.15); }
+    .btn-debug {
+      background: none;
+      border: 1px solid #475569;
+      color: #64748b;
+      padding: 2px 10px;
+      border-radius: 6px;
+      font-size: 0.65rem;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .btn-debug:hover { color: #94a3b8; border-color: #94a3b8; }
+    .btn-debug.active { color: #fbbf24; border-color: #fbbf24; }
 
     .overlay {
       display: none;
@@ -343,6 +355,7 @@
 <div class="legend">
   <div class="legend-item"><div class="legend-dot blue"></div> Conjuntos</div>
   <div class="legend-item"><div class="legend-dot green"></div> Matrices</div>
+  <button class="btn-debug" id="btnDev" onclick="toggleDev()">mostrar soluciones</button>
 </div>
 
 <div class="game-grid" id="gameGrid">
@@ -625,8 +638,18 @@
   function hideInfo() {
     document.getElementById('infoOverlay').classList.remove('active');
   }
+  function toggleDev() {
+    devMode = !devMode;
+    document.querySelectorAll('.card-badge').forEach(b => b.classList.toggle('show'));
+    const btn = document.getElementById('btnDev');
+    if (btn) {
+      btn.classList.toggle('active');
+      btn.textContent = devMode ? 'ocultar soluciones' : 'mostrar soluciones';
+    }
+    if (devMode) console.log('--- Modo desarrollador activado ---');
+  }
 
-  // click 30 veces en "Conjuntos" para activar modo dev
+  // click 15 veces en "Conjuntos" para activar modo dev
   document.querySelector('.legend-item:first-child')?.addEventListener('click', function() {
     clickCount++;
     if (clickCount >= 15 && !devMode) {
