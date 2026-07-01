@@ -61,10 +61,10 @@
     .game-grid {
       position: relative;
       display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 10px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
       width: 100%;
-      max-width: 900px;
+      max-width: 620px;
       margin-bottom: 16px;
     }
     .game-grid svg {
@@ -348,7 +348,7 @@
 <p class="subtitle">Juego de asociación entre Conjuntos, Matrices y Memoria Histórica</p>
 
 <div class="stats">
-  <span>Pares: <strong id="score">0</strong> / 12</span>
+  <span>Pares: <strong id="score">0</strong> / <span id="totalPairs"></span></span>
   <span>Turnos: <strong id="turns">0</strong></span>
 </div>
 
@@ -375,7 +375,7 @@
 <div class="overlay" id="winOverlay">
   <div class="modal">
     <h2>--- ¡Juego completado! ---</h2>
-    <p>Encontraste los 12 pares.</p>
+    <p>Encontraste todos los pares.</p>
     <p id="finalTurns">Turnos utilizados: 0</p>
     <p style="font-size:0.8rem;color:#94a3b8;margin-top:12px;">
       Cada par asocia un concepto matemático con un hecho de nuestra memoria histórica.<br>
@@ -433,7 +433,7 @@
       math: { symbol: '∅', name: 'Conjunto Vacío', desc: 'Conjunto que no posee elementos.' },
       history: { name: 'Las listas negadas', desc: 'Ausencia de registros oficiales; la información fue deliberadamente destruida u ocultada.' },
       justify: 'Simboliza la ausencia de información o la inexistencia de registros oficiales.' },
-    { id: 7, cat: 'Matrices', color: 'green',
+    /* { id: 7, cat: 'Matrices', color: 'green',
       math: { symbol: '3×3', name: 'Matriz 3×3', desc: 'Estructura rectangular de 3 filas y 3 columnas.' },
       history: { name: 'Las tres Juntas Militares', desc: 'Las tres juntas que gobernaron durante la dictadura: una estructura de poder tripartita.' },
       justify: 'La estructura 3×3 representa simbólicamente las tres juntas militares.' },
@@ -456,7 +456,7 @@
     { id: 12, cat: 'Matrices', color: 'green',
       math: { symbol: 'I', name: 'Matriz Identidad', desc: 'Matriz que representa el estado neutro o normal del sistema.' },
       history: { name: 'Constitución suspendida', desc: 'La Constitución Nacional, marco normativo del Estado de derecho, fue derogada de hecho.' },
-      justify: 'La matriz identidad representa el estado normal del sistema; la ruptura del orden constitucional invita a reflexionar sobre su ausencia. Recurso pedagógico, no equivalencia literal.' }
+      justify: 'La matriz identidad representa el estado normal del sistema; la ruptura del orden constitucional invita a reflexionar sobre su ausencia. Recurso pedagógico, no equivalencia literal.' }, */
   ];
 
   let cards = [];
@@ -488,6 +488,7 @@
     locked = false;
     document.getElementById('score').textContent = '0';
     document.getElementById('turns').textContent = '0';
+    document.getElementById('totalPairs').textContent = PAIRS.length;
     cards = [];
     PAIRS.forEach(p => {
       cards.push({ pairId: p.id, type: 'math', color: p.color, cat: p.cat, symbol: p.math.symbol, name: p.math.name, desc: p.math.desc, justify: p.justify });
@@ -604,7 +605,7 @@
         showToast(a.justify);
         flipped = [];
         locked = false;
-        if (matched === 12) {
+        if (matched === PAIRS.length) {
           setTimeout(showWin, 800);
         }
       }, 400);
