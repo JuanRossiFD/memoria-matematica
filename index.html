@@ -381,6 +381,7 @@
       Cada par asocia un concepto matemático con un hecho de nuestra memoria histórica.<br>
       Reflexioná sobre las analogías mientras jugás.
     </p>
+    <p style="font-size:0.7rem;color:#64748b;margin-top:6px;" id="pairCountMsg"></p>
     <button class="btn" onclick="closeWin(); initGame();">Jugar de nuevo</button>
   </div>
 </div>
@@ -417,23 +418,23 @@
       math: { symbol: 'A ⊂ U', name: 'Subconjunto', desc: 'Conjunto incluido dentro de otro de mayor tamaño.' },
       history: { name: 'Detenidos-desaparecidos', desc: 'Personas secuestradas ilegalmente durante la dictadura; subconjunto de la población total.' },
       justify: 'Los detenidos-desaparecidos constituyen un subconjunto de la población total.' },
-    { id: 3, cat: 'Conjuntos', color: 'blue',
+    /* { id: 3, cat: 'Conjuntos', color: 'blue',
       math: { symbol: '∩', name: 'Intersección', desc: 'Elementos comunes a dos conjuntos simultáneamente.' },
       history: { name: 'Detenidos y exiliados', desc: 'Personas que pertenecen a ambos grupos: secuestrados y forzados al exilio.' },
       justify: 'Representa las personas que pertenecen simultáneamente a ambos grupos.' },
     { id: 4, cat: 'Conjuntos', color: 'blue',
       math: { symbol: "A'", name: 'Complemento', desc: 'Elementos del universo que no pertenecen al conjunto.' },
       history: { name: 'Ciudadanos no perseguidos', desc: 'Quienes no fueron víctimas directas del terrorismo de Estado.' },
-      justify: 'Son quienes no pertenecen al conjunto de perseguidos.' },
+      justify: 'Son quienes no pertenecen al conjunto de perseguidos.' }, */
     { id: 5, cat: 'Conjuntos', color: 'blue',
       math: { symbol: '|A|', name: 'Cardinalidad', desc: 'Cantidad de elementos que posee un conjunto.' },
       history: { name: '30.000 desaparecidos', desc: 'Cifra simbólica que representa la magnitud del terrorismo de Estado.' },
       justify: 'La cardinalidad representa la cantidad de elementos de un conjunto.' },
-    { id: 6, cat: 'Conjuntos', color: 'blue',
+    /* { id: 6, cat: 'Conjuntos', color: 'blue',
       math: { symbol: '∅', name: 'Conjunto Vacío', desc: 'Conjunto que no posee elementos.' },
       history: { name: 'Las listas negadas', desc: 'Ausencia de registros oficiales; la información fue deliberadamente destruida u ocultada.' },
-      justify: 'Simboliza la ausencia de información o la inexistencia de registros oficiales.' },
-    /* { id: 7, cat: 'Matrices', color: 'green',
+      justify: 'Simboliza la ausencia de información o la inexistencia de registros oficiales.' }, */
+    { id: 7, cat: 'Matrices', color: 'green',
       math: { symbol: '3×3', name: 'Matriz 3×3', desc: 'Estructura rectangular de 3 filas y 3 columnas.' },
       history: { name: 'Las tres Juntas Militares', desc: 'Las tres juntas que gobernaron durante la dictadura: una estructura de poder tripartita.' },
       justify: 'La estructura 3×3 representa simbólicamente las tres juntas militares.' },
@@ -441,19 +442,19 @@
       math: { symbol: 'aᵢⱼ', name: 'Elemento aᵢⱼ', desc: 'Cada valor ocupa una posición específica (fila i, columna j).' },
       history: { name: 'Represor en un centro clandestino', desc: 'Cada individuo operaba en un lugar y rol específico dentro de la estructura represiva.' },
       justify: 'Cada elemento ocupa una posición específica dentro de una estructura mayor.' },
-    { id: 9, cat: 'Matrices', color: 'green',
+    /* { id: 9, cat: 'Matrices', color: 'green',
       math: { symbol: 'Aᵀ', name: 'Transpuesta', desc: 'Matriz que intercambia filas por columnas; cambia la perspectiva.' },
       history: { name: 'Juicios de lesa humanidad', desc: 'Cambio de perspectiva: de la impunidad al juzgamiento de los crímenes.' },
       justify: 'Representa simbólicamente el cambio de perspectiva: de la impunidad al juzgamiento.' },
     { id: 10, cat: 'Matrices', color: 'green',
       math: { symbol: 'det(A) = 0', name: 'Determinante nulo', desc: 'La matriz pierde su inversa; la estructura se vuelve inestable.' },
       history: { name: 'Caída de la Junta (1983)', desc: 'El colapso del régimen militar: una estructura que perdió estabilidad.' },
-      justify: 'El determinante nulo simboliza una estructura que pierde estabilidad.' },
+      justify: 'El determinante nulo simboliza una estructura que pierde estabilidad.' }, */
     { id: 11, cat: 'Matrices', color: 'green',
       math: { symbol: 'A + B', name: 'Suma de matrices', desc: 'Combinación elemento a elemento de dos matrices de igual dimensión.' },
       history: { name: 'Organismos de DDHH unidos', desc: 'La acción conjunta de múltiples organizaciones que sumaron fuerzas por justicia.' },
       justify: 'La suma representa la acción conjunta de múltiples organizaciones.' },
-    { id: 12, cat: 'Matrices', color: 'green',
+    /* { id: 12, cat: 'Matrices', color: 'green',
       math: { symbol: 'I', name: 'Matriz Identidad', desc: 'Matriz que representa el estado neutro o normal del sistema.' },
       history: { name: 'Constitución suspendida', desc: 'La Constitución Nacional, marco normativo del Estado de derecho, fue derogada de hecho.' },
       justify: 'La matriz identidad representa el estado normal del sistema; la ruptura del orden constitucional invita a reflexionar sobre su ausencia. Recurso pedagógico, no equivalencia literal.' }, */
@@ -489,6 +490,8 @@
     document.getElementById('score').textContent = '0';
     document.getElementById('turns').textContent = '0';
     document.getElementById('totalPairs').textContent = PAIRS.length;
+    const msg = document.getElementById('pairCountMsg');
+    if (msg) msg.textContent = PAIRS.length + ' pares en total \u2014 ' + (PAIRS.length * 2) + ' cartas';
     cards = [];
     PAIRS.forEach(p => {
       cards.push({ pairId: p.id, type: 'math', color: p.color, cat: p.cat, symbol: p.math.symbol, name: p.math.name, desc: p.math.desc, justify: p.justify });
